@@ -1,24 +1,60 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect, useContext } from "react";
+import { BrowserRouter, Switch, Route } from "react-router-dom";
+
+import { GlobalStyles } from "./Global.styles";
+
+import { routes, routesAuth } from "config";
+
+import * as pages from "./pages";
+import { Navbar } from "./components";
+
+import { userContext } from "store";
+import { loginUser } from "store/actions";
 
 function App() {
+  const { userDispatch } = useContext(userContext);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    (async () => {
+      try {
+        if (localStorage.getItem("user")) {
+          userDispatch(loginUser(JSON.parse(localStorage.getItem("user"))));
+        }
+        setLoading(false);
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+  }, [userDispatch]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <GlobalStyles />
+      {!loading && (
+        <>
+          <Navbar />
+          <Switch>
+            {routes.map((route, i) => (
+              <Route
+                path={route.pathname}
+                component={pages[route.component] || pages.NotFound}
+                exact
+                key={i}
+              />
+            ))}
+            {routesAuth.map((route, i) => (
+              <Route
+                path={route.pathname}
+                component={pages[route.component] || pages.NotFound}
+                exact
+                key={i}
+              />
+            ))}
+            <Route component={pages.NotFound} />
+          </Switch>
+        </>
+      )}
+    </BrowserRouter>
   );
 }
 
